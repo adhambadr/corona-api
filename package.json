@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "yarn dev",
-    "dev": "nodemon --exec babel-node src/index.js"
+    "dev": "nodemon --exec babel-node src/index.js",
+    "build": "npx babel src --ignore 'node_modules','compiled' --out-dir compiled --copy-files"
   },
   "author": "",
   "license": "ISC",
