@@ -2,7 +2,21 @@ import axios from "axios";
 import _ from "lodash";
 import cj from "csvjson";
 import fs from "fs";
+import i18 from "i18n-iso-countries";
+
 const importInterval = 15 * 60 * 1000; // Responsible querying, only refresh data every 15 minutes since most data worldwide refreshes maximum once an hour hour
+
+const countryCodes = {};
+_.map(i18.getNames("en"), (name, cc) => (countryCodes[name] = cc));
+const convertCountryName = englishCountry =>
+	i18.getName(
+		countryCodes[englishCountry] ||
+			_.find(
+				countryCodes,
+				val => _.indexOf(_.toLower(val), _.toLower(englishCountry)) > -1
+			),
+		"de"
+	) || englishCountry;
 
 export default class CoronaData {
 	static currentUrl =
@@ -34,14 +48,14 @@ export default class CoronaData {
 	};
 
 	static getCountryCurrent = async country => {
+		country = convertCountryName(country);
 		const data = await this.getData();
-		const globalPoint = _.find(
-			data["global"],
-			({ label }) => _.indexOf(country, label) > -1
+		const globalPoint = _.find(data["global"], ({ label }) =>
+			_.eq(country, label)
 		);
 		if (globalPoint)
 			return {
-				...result,
+				...globalPoint,
 				statesData: []
 			};
 		const keys = ["confirmed", "recovered", "deaths"];
