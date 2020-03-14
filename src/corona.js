@@ -44,17 +44,14 @@ export default class CoronaData {
 				...result,
 				statesData: []
 			};
-		const result = {
-			confirmed: 0,
-			recovered: 0,
-			deaths: 0
-		};
+		const keys = ["confirmed", "recovered", "deaths"];
+		const result = {};
 		const statesData = _.get(data, country, []);
-		_.map(statesData, ({ confirmed, deaths, recovered }) => {
-			result.confirmed += parseInt(confirmed);
-			result.deaths += parseInt(deaths);
-			result.recovered += parseInt(recovered);
-		});
+		_.map(statesData, data =>
+			_.map(keys, key => {
+				result[key] = parseInt(data[key]) + (result[key] || 0);
+			})
+		);
 		return {
 			...result,
 			statesData
