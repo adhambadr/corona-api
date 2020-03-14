@@ -2,7 +2,7 @@ import axios from "axios";
 import _ from "lodash";
 import cj from "csvjson";
 import fs from "fs";
-const importInterval = 15 * 60 * 1000;
+const importInterval = 15 * 60 * 1000; // Responsible querying, only refresh data every 15 minutes since most data worldwide refreshes maximum once an hour hour
 
 export default class CoronaData {
 	static currentUrl =
@@ -34,7 +34,6 @@ export default class CoronaData {
 	};
 
 	static getCountryCurrent = async country => {
-		console.log(country);
 		const data = await this.getData();
 		const globalPoint = _.find(
 			data["global"],
@@ -60,5 +59,18 @@ export default class CoronaData {
 			...result,
 			statesData
 		};
+	};
+
+	static queryCountry = async (req, res) => {
+		try {
+			res.status(200).json(
+				await this.getCountryCurrent(
+					req.body.country || req.query.country
+				)
+			);
+		} catch (e) {
+			console.log(e);
+			res.status(500).json({ err: e });
+		}
 	};
 }

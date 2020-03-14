@@ -13,14 +13,8 @@ app.get("/status", (req, res) => {
 	res.status(200).json({ status: 1 });
 });
 
-app.post("/current", async (req, res) => {
-	try {
-		res.status(200).json(await corona.getCountryCurrent(req.body.country));
-	} catch (e) {
-		console.log(e);
-		res.status(500).json({ err: e });
-	}
-});
+app.post("/current", corona.queryCountry);
+app.get("/current", corona.queryCountry);
 
 const server = app.listen(app.get("port"), () => {
 	console.log(`Corona Server running → on PORT ${server.address().port}`);
