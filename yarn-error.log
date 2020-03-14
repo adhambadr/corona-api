@@ -1,0 +1,46 @@
+Arguments: 
+  /usr/local/Cellar/node/13.2.0/bin/node /usr/local/Cellar/yarn/1.19.2/libexec/bin/yarn.js add @babel/core @babel/cli @babel/node @babel/preset-env @babel/plugin-class-properties nodemon --dev
+
+PATH: 
+  /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/adhambadr/Library/Android/sdk/emulator:/Users/adhambadr/Library/Android/sdk/tools:/Users/adhambadr/Library/Android/sdk/tools/bin:/Users/adhambadr/Library/Android/sdk/platform-tools
+
+Yarn version: 
+  1.19.2
+
+Node version: 
+  13.2.0
+
+Platform: 
+  darwin x64
+
+Trace: 
+  Error: https://registry.yarnpkg.com/@babel%2fplugin-class-properties: Not found
+      at Request.params.callback [as _callback] (/usr/local/Cellar/yarn/1.19.2/libexec/lib/cli.js:66927:18)
+      at Request.self.callback (/usr/local/Cellar/yarn/1.19.2/libexec/lib/cli.js:140586:22)
+      at Request.emit (events.js:210:5)
+      at Request.<anonymous> (/usr/local/Cellar/yarn/1.19.2/libexec/lib/cli.js:141558:10)
+      at Request.emit (events.js:210:5)
+      at IncomingMessage.<anonymous> (/usr/local/Cellar/yarn/1.19.2/libexec/lib/cli.js:141480:12)
+      at Object.onceWrapper (events.js:299:28)
+      at IncomingMessage.emit (events.js:215:7)
+      at endReadableNT (_stream_readable.js:1200:12)
+      at processTicksAndRejections (internal/process/task_queues.js:80:21)
+
+npm manifest: 
+  {
+    "name": "corona",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC"
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
