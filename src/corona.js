@@ -60,7 +60,7 @@ export default class CoronaData {
 		return this.data;
 	};
 
-	static queryLocation = async (params = {}) => {
+	static getClosest = async (params = {}) => {
 		await this.getData();
 		let minDistance = 0;
 		const point = findNearest(
@@ -93,18 +93,25 @@ export default class CoronaData {
 				...globalPoint,
 				statesData: []
 			};
+
+		const statesData = _.get(data, country, []);
+		const result = this.aggregateStateData(statesData);
+
+		return {
+			...result,
+			statesData
+		};
+	};
+
+	static aggregateStateData = statesData => {
 		const keys = ["confirmed", "recovered", "deaths"];
 		const result = {};
-		const statesData = _.get(data, country, []);
 		_.map(statesData, data =>
 			_.map(keys, key => {
 				result[key] = data[key] + (result[key] || 0);
 			})
 		);
-		return {
-			...result,
-			statesData
-		};
+		return result;
 	};
 
 	static queryCountry = async (req, res) => {
@@ -115,6 +122,39 @@ export default class CoronaData {
 			console.log(e);
 			res.status(500).json({ err: e });
 		}
+	};
+
+	static queryWorld = async (req, res) => {
+		await this.getData();
+		res.status(200).json(
+			_.reduce(
+				this.rawData,
+				(sum, { confirmed, recovered, deaths }) => ({
+					confirmed: confirmed + (sum.confirmed || 0),
+					recovered: recovered + (sum.recovered || 0),
+					deaths: deaths + (sum.deaths || 0)
+				}),
+				{}
+			)
+		);
+	};
+	static queryLocation = async (req, res) => {
+		const result = await this.getClosest({ ...req.body });
+		if (!result)
+			return res.json({
+				err: "Parameters malformed or location not found"
+			});
+		if (result.parent === "global") return res.json(result);
+
+		const statesData = this.data[result.parent];
+		const countryData = this.aggregateStateData(statesData);
+		res.json({
+			...result,
+			countryData: {
+				...countryData,
+				statesData
+			}
+		});
 	};
 }
 
