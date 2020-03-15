@@ -25,7 +25,7 @@ POST | /current/location | {longitude : 5.1232 , latitude : -7.2321 } | simple g
 }
 ```
 
-#### ```/current```
+#### ```/current?country=Mexico```
 ```json
 {
     "parent": "global",
