@@ -41,19 +41,21 @@ export default class CoronaData {
 
 	static loadLocalData = async () => {
 		if (!fs.existsSync(dataDumpLocation)) {
-			const data = await this.queryData();
-			fs.writeFileSync(dataDumpLocation, JSON.stringify(data));
-			this.data = data;
-			return data;
+			await this.queryData();
+			fs.writeFileSync(dataDumpLocation, JSON.stringify(this.rawData));
+			return this.data;
 		}
-		return JSON.parse(fs.readFileSync(dataDumpLocation));
+		this.rawData = JSON.parse(fs.readFileSync(dataDumpLocation));
+		this.data = _.groupBy(this.rawData, "parent");
+		return this.data;
 	};
 
 	static queryData = async () => {
 		const { data } = await axios.get(this.currentUrl);
 		const json = cj.toObject(data);
 		console.log("querying ", new Date().getTime());
-		this.data = _.groupBy(json, "parent");
+		this.rawData = _.map(json, convertData);
+		this.data = _.groupBy(this.rawData, "parent");
 		return this.data;
 	};
 
@@ -73,7 +75,7 @@ export default class CoronaData {
 		const statesData = _.get(data, country, []);
 		_.map(statesData, data =>
 			_.map(keys, key => {
-				result[key] = parseInt(data[key]) + (result[key] || 0);
+				result[key] = data[key] + (result[key] || 0);
 			})
 		);
 		return {
@@ -83,15 +85,23 @@ export default class CoronaData {
 	};
 
 	static queryCountry = async (req, res) => {
+		const country = req.query.country || req.body.country;
 		try {
-			res.status(200).json(
-				await this.getCountryCurrent(
-					req.body.country || req.query.country
-				)
-			);
+			res.status(200).json(await this.getCountryCurrent(country));
 		} catch (e) {
 			console.log(e);
 			res.status(500).json({ err: e });
 		}
 	};
 }
+
+const convertData = obj => ({
+	...obj,
+	lat: Number(obj.lat),
+	lon: Number(obj.lon),
+	updated: Number(obj.updated),
+	confirmed: Number(obj.confirmed),
+	recovered: Number(obj.recovered),
+	deaths: Number(obj.deaths),
+	date: new Date(obj.date)
+});
