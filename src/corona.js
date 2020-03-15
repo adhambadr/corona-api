@@ -4,6 +4,7 @@ import cj from "csvjson";
 import fs from "fs";
 import i18 from "i18n-iso-countries";
 import { findNearest } from "geolib";
+import path from "path";
 
 const importInterval = 15 * 60 * 1000; // Responsible querying, only refresh data every 15 minutes since most data worldwide refreshes maximum once an hour hour
 
@@ -19,7 +20,10 @@ const convertCountryName = englishCountry =>
 		"de"
 	) || englishCountry;
 
-const dataDumpLocation = "./datadumps/data.json";
+const dataDumpLocation =
+	process.env.NODE_ENV !== "production"
+		? "./datadumps/data.json"
+		: path.resolve(__dirname, "./datadumps/data.json");
 
 export default class CoronaData {
 	static currentUrl =
@@ -35,7 +39,7 @@ export default class CoronaData {
 		new Date().getTime() - this.lastImport >= importInterval;
 
 	static getData = async () => {
-		if (process.env.NODE_ENV !== "production") return this.loadLocalData();
+		//if (process.env.NODE_ENV !== "production") return this.loadLocalData();
 		if (!this.data || this.shouldRefresh()) return this.queryData();
 		return this.data;
 	};
@@ -55,6 +59,7 @@ export default class CoronaData {
 		const { data } = await axios.get(this.currentUrl);
 		const json = cj.toObject(data);
 		console.log("querying ", new Date().getTime());
+		this.lastImport = new Date().getTime();
 		this.rawData = _.map(json, convertData);
 		this.data = _.groupBy(this.rawData, "parent");
 		return this.data;
