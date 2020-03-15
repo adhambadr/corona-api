@@ -18,6 +18,8 @@ const convertCountryName = englishCountry =>
 		"de"
 	) || englishCountry;
 
+const dataDumpLocation = "./datadumps/data.json";
+
 export default class CoronaData {
 	static currentUrl =
 		"https://interaktiv.morgenpost.de/corona-virus-karte-infektionen-deutschland-weltweit/data/Coronavirus.current.v2.csv";
@@ -32,17 +34,25 @@ export default class CoronaData {
 		new Date().getTime() - this.lastImport >= importInterval;
 
 	static getData = async () => {
+		if (process.env.NODE_ENV !== "production") return this.loadLocalData();
 		if (!this.data || this.shouldRefresh()) return this.queryData();
 		return this.data;
+	};
+
+	static loadLocalData = async () => {
+		if (!fs.existsSync(dataDumpLocation)) {
+			const data = await this.queryData();
+			fs.writeFileSync(dataDumpLocation, JSON.stringify(data));
+			this.data = data;
+			return data;
+		}
+		return JSON.parse(fs.readFileSync(dataDumpLocation));
 	};
 
 	static queryData = async () => {
 		const { data } = await axios.get(this.currentUrl);
 		const json = cj.toObject(data);
-		fs.writeFileSync(
-			`data-${new Date().getTime()}.json`,
-			JSON.stringify(json)
-		);
+		console.log("querying ", new Date().getTime());
 		this.data = _.groupBy(json, "parent");
 		return this.data;
 	};
