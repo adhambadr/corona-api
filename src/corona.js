@@ -135,9 +135,9 @@ export default class CoronaData {
 			_.reduce(
 				this.rawData,
 				(sum, { confirmed, recovered, deaths }) => ({
-					confirmed: confirmed + (sum.confirmed || 0),
-					recovered: recovered + (sum.recovered || 0),
-					deaths: deaths + (sum.deaths || 0)
+					confirmed: (confirmed || 0) + (sum.confirmed || 0),
+					recovered: (recovered || 0) + (sum.recovered || 0),
+					deaths: (deaths || 0) + (sum.deaths || 0)
 				}),
 				{}
 			)
