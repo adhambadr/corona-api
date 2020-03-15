@@ -3,6 +3,7 @@ import _ from "lodash";
 import cj from "csvjson";
 import fs from "fs";
 import i18 from "i18n-iso-countries";
+import { findNearest } from "geolib";
 
 const importInterval = 15 * 60 * 1000; // Responsible querying, only refresh data every 15 minutes since most data worldwide refreshes maximum once an hour hour
 
@@ -57,6 +58,28 @@ export default class CoronaData {
 		this.rawData = _.map(json, convertData);
 		this.data = _.groupBy(this.rawData, "parent");
 		return this.data;
+	};
+
+	static queryLocation = async (params = {}) => {
+		await this.getData();
+		let minDistance = 0;
+		const point = findNearest(
+			params,
+			_.map(
+				_.filter(this.rawData, ({ lat, lon }) => lat && lon),
+				({ lat, lon }) => ({
+					latitude: lat,
+					longitude: lon
+				})
+			)
+		);
+		if (!point) return;
+		const result = _.find(
+			this.rawData,
+			({ lat, lon, parent, label }) =>
+				_.eq(lat, point.latitude) && _.eq(lon, point.longitude)
+		);
+		return result;
 	};
 
 	static getCountryCurrent = async country => {
