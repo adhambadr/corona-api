@@ -3,6 +3,7 @@ import axios from "axios";
 import _ from "lodash";
 import cj from "csvjson";
 import fs from "fs";
+import { convertCountryName } from "./countries.js";
 
 export default class historicData extends Corona {
 	static cache = process.env.HISTORIC_DATA || "./datadumps/history.json";
@@ -63,5 +64,17 @@ export default class historicData extends Corona {
 			)
 		);
 		return result;
+	};
+
+	static queryCountry = async (req, res) => {
+		const country = convertCountryName(req.query.country);
+
+		const city = req.query.city;
+		try {
+			res.status(200).json(await this.historyQuery(country, city));
+		} catch (e) {
+			console.log(e);
+			res.status(500).json({ err: e });
+		}
 	};
 }

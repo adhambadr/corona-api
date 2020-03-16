@@ -1,7 +1,7 @@
 import "@babel/polyfill";
 import express from "express";
 import bodyParser from "body-parser";
-
+import history from "./historicData.js";
 import corona from "./corona.js";
 
 const app = express();
@@ -18,6 +18,8 @@ app.get("/current", corona.queryCountry);
 
 app.get("/", corona.queryWorld);
 app.post("/current/location", corona.queryLocation);
+
+app.get("/historic", history.queryCountry);
 
 const server = app.listen(app.get("port"), () => {
 	console.log(`Corona Server running → on PORT ${server.address().port}`);

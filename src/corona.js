@@ -2,14 +2,11 @@ import axios from "axios";
 import _ from "lodash";
 import cj from "csvjson";
 import fs from "fs";
-import i18 from "i18n-iso-countries";
+import { convertCountryName } from "./countries.js";
 import { findNearest } from "geolib";
 import path from "path";
 
 const importInterval = 15 * 60 * 1000; // Responsible querying, only refresh data every 15 minutes since most data worldwide refreshes maximum once an hour hour
-
-const countryCodes = {};
-_.map(i18.getNames("en"), (name, cc) => (countryCodes[name] = cc));
 
 const dataDumpLocation =
 	process.env.NODE_ENV !== "production"
@@ -79,7 +76,7 @@ export default class CoronaData {
 	};
 
 	static getCountryCurrent = async country => {
-		country = this.convertCountryName(country);
+		country = convertCountryName(country);
 		const data = await this.getData();
 		const globalPoint = _.find(data["global"], ({ label }) =>
 			_.eq(country, label)
@@ -163,16 +160,4 @@ export default class CoronaData {
 		deaths: Number(obj.deaths),
 		date: new Date(obj.date)
 	});
-
-	static convertCountryName = englishCountry =>
-		i18.getName(
-			countryCodes[englishCountry] ||
-				_.find(
-					countryCodes,
-					val =>
-						_.indexOf(_.toLower(val), _.toLower(englishCountry)) >
-						-1
-				),
-			"de"
-		) || englishCountry;
 }
