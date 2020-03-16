@@ -1,14 +1,21 @@
 import i18 from "i18n-iso-countries";
 import _ from "lodash";
-const countryCodes = {};
-_.map(i18.getNames("en"), (name, cc) => (countryCodes[name] = cc));
 
-export const convertCountryName = englishCountry =>
-	i18.getName(
-		countryCodes[englishCountry] ||
-			_.find(
-				countryCodes,
-				val => _.indexOf(_.toLower(val), _.toLower(englishCountry)) > -1
-			),
-		"de"
-	) || englishCountry;
+const englishCountries = _.invert(i18.getNames("en"));
+const germanCountries = _.invert(i18.getNames("de"));
+
+const alphaCodes = i18.getNames("de");
+
+export const convertCountryName = country =>
+	germanCountries[country]
+		? country
+		: i18.getName(
+				englishCountries[country] ||
+					_.find(englishCountries, (val, key) =>
+						compareCountries(key, country)
+					),
+				"de"
+		  ) || country;
+
+const compareCountries = (val = "", country = "") =>
+	val.toLowerCase().indexOf(country.toLowerCase()) > -1;
