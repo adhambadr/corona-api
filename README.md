@@ -13,6 +13,7 @@ Method | Path | Query | Result
 GET | / | | Data for world numbers (confirmed , recovered, deaths)
 GET | /current | ?country=Spain | data for country (obj description below)
 POST | /current/location | {longitude : 5.1232 , latitude : -7.2321 } | simple geo nearest data point for given location
+GET | /historic | ?country=USA | historic data points up till now |
 
 ### Result object
 
@@ -70,7 +71,22 @@ Returns either same  country object as ```/current``` result or if it finds a st
      }
      ...
 ```
-
+### ```/history?country=France```
+returns keyed object with all the datapoints since cases tracking, key being State name + a federal key for a combined list of data points
+```javascript 
+{
+ "Saint Barthélemy" : [...] , /* Same result object as above */
+ "federal": [
+        {
+            "date": "2020-03-04T00:00:00.000Z",
+            "confirmed": 3,
+            "recovered": 0,
+            "deaths": 0
+        },
+        ...
+   ]
+}
+```
 ## Development
 
 #### Install 
