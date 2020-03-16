@@ -51,13 +51,17 @@ export default class historicData extends Corona {
 				]
 			};
 		let result = {};
+		const stateData = _.concat(
+			countryData,
+			_.get(current, "statesData", [])
+		);
 		if (city)
 			result = _.sortBy(
-				_.filter(countryData, _.matches({ label: city })),
+				_.filter(stateData, _.matches({ label: city })),
 				"date"
 			);
 		else
-			_.map(_.groupBy(countryData, "label"), (stateData, stateName) => {
+			_.map(_.groupBy(stateData, "label"), (stateData, stateName) => {
 				result[stateName] = _.sortBy(stateData, "date");
 			});
 
