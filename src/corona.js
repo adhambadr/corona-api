@@ -10,15 +10,6 @@ const importInterval = 15 * 60 * 1000; // Responsible querying, only refresh dat
 
 const countryCodes = {};
 _.map(i18.getNames("en"), (name, cc) => (countryCodes[name] = cc));
-const convertCountryName = englishCountry =>
-	i18.getName(
-		countryCodes[englishCountry] ||
-			_.find(
-				countryCodes,
-				val => _.indexOf(_.toLower(val), _.toLower(englishCountry)) > -1
-			),
-		"de"
-	) || englishCountry;
 
 const dataDumpLocation =
 	process.env.NODE_ENV !== "production"
@@ -28,7 +19,7 @@ const dataDumpLocation =
 export default class CoronaData {
 	static currentUrl =
 		"https://interaktiv.morgenpost.de/corona-virus-karte-infektionen-deutschland-weltweit/data/Coronavirus.current.v2.csv";
-	static historicData =
+	static historicDataUrl =
 		"https://interaktiv.morgenpost.de/corona-virus-karte-infektionen-deutschland-weltweit/data/Coronavirus.history.v2.csv";
 	static lastImport = 0;
 
@@ -60,7 +51,7 @@ export default class CoronaData {
 		const json = cj.toObject(data);
 		console.log("querying ", new Date().getTime());
 		this.lastImport = new Date().getTime();
-		this.rawData = _.map(json, convertData);
+		this.rawData = _.map(json, this.convertData);
 		this.data = _.groupBy(this.rawData, "parent");
 		return this.data;
 	};
@@ -88,7 +79,7 @@ export default class CoronaData {
 	};
 
 	static getCountryCurrent = async country => {
-		country = convertCountryName(country);
+		country = this.convertCountryName(country);
 		const data = await this.getData();
 		const globalPoint = _.find(data["global"], ({ label }) =>
 			_.eq(country, label)
@@ -161,15 +152,27 @@ export default class CoronaData {
 			}
 		});
 	};
-}
 
-const convertData = obj => ({
-	...obj,
-	lat: Number(obj.lat),
-	lon: Number(obj.lon),
-	updated: Number(obj.updated),
-	confirmed: Number(obj.confirmed),
-	recovered: Number(obj.recovered),
-	deaths: Number(obj.deaths),
-	date: new Date(obj.date)
-});
+	static convertData = obj => ({
+		...obj,
+		lat: Number(obj.lat),
+		lon: Number(obj.lon),
+		updated: Number(obj.updated),
+		confirmed: Number(obj.confirmed),
+		recovered: Number(obj.recovered),
+		deaths: Number(obj.deaths),
+		date: new Date(obj.date)
+	});
+
+	static convertCountryName = englishCountry =>
+		i18.getName(
+			countryCodes[englishCountry] ||
+				_.find(
+					countryCodes,
+					val =>
+						_.indexOf(_.toLower(val), _.toLower(englishCountry)) >
+						-1
+				),
+			"de"
+		) || englishCountry;
+}
