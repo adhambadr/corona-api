@@ -17,7 +17,8 @@ export default class CoronaData {
 	static currentUrl =
 		"https://interaktiv.morgenpost.de/corona-virus-karte-infektionen-deutschland-weltweit/data/Coronavirus.current.v2.csv";
 	static historicDataUrl =
-		"https://interaktiv.morgenpost.de/corona-virus-karte-infektionen-deutschland-weltweit/data/Coronavirus.history.v2.csv";
+		"https://interaktiv.morgenpost.de/corona-virus-karte-infektionen-deutschland-weltweit/data/Coronavirus.history.v2.csv?" +
+		new Date().getTime();
 	static lastImport = 0;
 
 	static data = {};

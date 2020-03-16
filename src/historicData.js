@@ -9,34 +9,46 @@ export default class historicData extends Corona {
 	static cache = process.env.HISTORIC_DATA || "./datadumps/history.json";
 
 	static cleanData = () => {
-		this.data = _.groupBy(this.rawData, "parent");
+		this.timeline = _.groupBy(this.timelineRawData, "parent");
 	};
-	static queryData = async () => {
+	static queryHistoricData = async () => {
 		const { data } = await axios.get(this.historicDataUrl);
 		const json = cj.toObject(data);
-		this.rawData = _.map(json, this.convertData);
+		this.timelineRawData = _.map(json, this.convertData);
+
+		await this.getData();
 		this.cleanData();
 	};
 
-	static loadData = async () => {
-		if (this.rawData) return;
+	static loadHistory = async () => {
+		if (this.timelineRawData) return;
 
 		if (!fs.existsSync(this.cache)) {
-			await this.queryData();
-			return fs.writeFileSync(this.cache, JSON.stringify(this.rawData));
+			await this.queryHistoricData();
+			return fs.writeFileSync(
+				this.cache,
+				JSON.stringify(this.timelineRawData)
+			);
 		}
-		this.rawData = JSON.parse(fs.readFileSync(this.cache));
+		this.timelineRawData = JSON.parse(fs.readFileSync(this.cache));
 		this.cleanData();
 	};
 	static historyQuery = async (country, city) => {
-		await this.loadData();
-		const countryData = this.data[country] || [];
+		await this.loadHistory();
+		const current = (await this.getCountryCurrent(country)) || {};
+		const countryData = this.timeline[country] || [];
 		if (!_.size(countryData))
 			return {
-				federal: _.sortBy(
-					_.filter(this.data.global, _.matches({ label: country })),
-					"date"
-				)
+				federal: [
+					..._.sortBy(
+						_.filter(
+							this.timeline.global,
+							_.matches({ label: country })
+						),
+						"date"
+					),
+					current
+				]
 			};
 		let result = {};
 		if (city)
@@ -63,6 +75,7 @@ export default class historicData extends Corona {
 				{}
 			)
 		);
+		result.federal.push(current);
 		return result;
 	};
 
