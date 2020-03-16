@@ -1,6 +1,8 @@
 # corona-api
 https://corona.blloc.com
 
+used in : https://corona-visuals.now.sh/ (https://github.com/adhambadr/corona-visual-tool)
+
 
 ### Simple REST api for getting live Covid-19 confirmed, recovered and deaths. 
 Data is piggybacked from morgenpost.de live tracker, which runs a web scraper scraps from Johns Hopkins University CSSE, WHO, CDC (USA), ECDC (Europa), NHC, DXY (China) and the official German Health ministry (Robert-Koch-Institut and German Federal Health Institute).
