@@ -26,7 +26,7 @@ GET | /historic | ?country=USA | historic data points up till now |
 }
 ```
 
-#### ```/current?country=Mexico```
+### ```/current?country=Mexico```
 ```json
 {
     "parent": "global",
@@ -44,7 +44,7 @@ GET | /historic | ?country=USA | historic data points up till now |
     "statesData": [] 
 }
 ```
-_ Few countries have state based data (Germany, China, USA, Italy) i reckon_
+_Few countries have state based data (Germany, China, USA, Italy) i reckon_
 
 ### ```/current/location```
 Returns either same  country object as ```/current``` result or if it finds a state level data point it will return : 
