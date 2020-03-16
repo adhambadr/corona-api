@@ -27,7 +27,7 @@ export default class historicData extends Corona {
 		this.rawData = JSON.parse(fs.readFileSync(this.cache));
 		this.cleanData();
 	};
-	static historyQuery = async (country = "Deutschland") => {
+	static historyQuery = async (country, city) => {
 		await this.loadData();
 		const countryData = this.data[country] || [];
 		if (!_.size(countryData))
@@ -37,11 +37,19 @@ export default class historicData extends Corona {
 					"date"
 				)
 			};
-		const result = {};
-		_.map(_.groupBy(countryData, "label"), (stateData, stateName) => {
-			result[stateName] = _.sortBy(stateData, "date");
-		});
+		let result = {};
+		if (city)
+			result = _.sortBy(
+				_.filter(countryData, _.matches({ label: city })),
+				"date"
+			);
+		else
+			_.map(_.groupBy(countryData, "label"), (stateData, stateName) => {
+				result[stateName] = _.sortBy(stateData, "date");
+			});
+
 		const timeSeries = _.groupBy(countryData, "date");
+
 		result.federal = _.map(timeSeries, (data, timestamp) =>
 			_.reduce(
 				data,
@@ -57,5 +65,3 @@ export default class historicData extends Corona {
 		return result;
 	};
 }
-
-historicData.historyQuery().then(console.log);
