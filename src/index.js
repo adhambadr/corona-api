@@ -1,12 +1,16 @@
 import "@babel/polyfill";
 import express from "express";
+import cors from "cors";
 import bodyParser from "body-parser";
 import history from "./historicData.js";
 import corona from "./corona.js";
 
 const app = express();
+
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
 app.set("port", process.env.PORT || 2019);
 
 app.get("/status", (req, res) => {
