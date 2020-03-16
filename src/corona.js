@@ -2,7 +2,7 @@ import axios from "axios";
 import _ from "lodash";
 import cj from "csvjson";
 import fs from "fs";
-import { convertCountryName } from "./countries.js";
+import { convertCountryName, convertGermanToEnglish } from "./countries.js";
 import { findNearest } from "geolib";
 import path from "path";
 
@@ -148,6 +148,18 @@ export default class CoronaData {
 				statesData
 			}
 		});
+	};
+	static getAllCountries = async (req, res) => {
+		await this.getData();
+		res.json(
+			_.map(
+				[
+					..._.keys(this.data),
+					..._.uniq(_.map(this.data.global, "label"))
+				],
+				convertGermanToEnglish
+			)
+		);
 	};
 
 	static convertData = obj => ({

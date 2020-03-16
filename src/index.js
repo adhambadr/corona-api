@@ -25,6 +25,8 @@ app.post("/current/location", corona.queryLocation);
 
 app.get("/historic", history.queryCountry);
 
+app.get("/countries", corona.getAllCountries);
+
 const server = app.listen(app.get("port"), () => {
 	console.log(`Corona Server running → on PORT ${server.address().port}`);
 });
