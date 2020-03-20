@@ -1,0 +1,16 @@
+{
+  "apps": [
+    {
+      "name": "Corona APIr",
+      "script": "/var/www/coronaAPI/compiled/index.js",
+      "watch": true,
+      "ignore_watch": ["datadumps", "node_modules"],
+      "env": {
+        "NODE_ENV": "production",
+        "HTTPS": "true",
+        "PORT": "2019",
+        "verbose": true
+      }
+    }
+  ]
+}
