@@ -9,7 +9,8 @@
         "NODE_ENV": "production",
         "HTTPS": "true",
         "PORT": "2019",
-        "verbose": true
+        "verbose": true,
+        "HISTORIC_DATA": "/var/www/coronaAPI/compiled/datadumps"
       }
     }
   ]
