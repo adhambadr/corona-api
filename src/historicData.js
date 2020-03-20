@@ -4,7 +4,7 @@ import _ from "lodash";
 import cj from "csvjson";
 import fs from "fs";
 import { convertCountryName } from "./countries.js";
-
+import path from "path";
 export default class historicData extends Corona {
 	static cache =
 		path.join(process.env.HISTORIC_DATA, "history.json") ||
