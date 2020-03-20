@@ -15,15 +15,18 @@ export default class historicData extends Corona {
 		const { data } = await axios.get(this.historicDataUrl);
 		const json = cj.toObject(data);
 		this.timelineRawData = _.map(json, this.convertData);
-
+		this.lastImport = new Date().getTime();
 		await this.getData();
 		this.cleanData();
 	};
 
-	static loadHistory = async () => {
-		if (this.timelineRawData) return;
+	static shouldRefresh = () =>
+		!this.timelineRawData ||
+		!this.lastImport ||
+		new Date().getTime() - this.lastImport > 1000 * 60 * 60 * 5; // 5 hours
 
-		if (!fs.existsSync(this.cache)) {
+	static loadHistory = async () => {
+		if (this.shouldRefresh() || !fs.existsSync(this.cache)) {
 			await this.queryHistoricData();
 			return fs.writeFileSync(
 				this.cache,
