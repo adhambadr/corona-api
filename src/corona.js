@@ -79,9 +79,10 @@ export default class CoronaData {
 	static getCountryCurrent = async country => {
 		country = convertCountryName(country);
 		const data = await this.getData();
-		const globalPoint = _.find(data["global"], ({ label }) =>
+		let globalPoint = _.find(data["global"], ({ label }) =>
 			_.eq(country, label)
 		);
+		//console.log(globalPoint);
 		if (globalPoint)
 			return {
 				...globalPoint,
@@ -96,6 +97,9 @@ export default class CoronaData {
 			statesData
 		};
 	};
+
+	static isFrance = country =>
+		!["france", "frankreich"].includes(country.toLowerCase());
 
 	static aggregateStateData = statesData => {
 		const keys = ["confirmed", "recovered", "deaths"];
@@ -153,12 +157,14 @@ export default class CoronaData {
 	static getAllCountries = async (req, res) => {
 		await this.getData();
 		res.json(
-			_.map(
-				[
-					..._.keys(this.data),
-					..._.uniq(_.map(this.data.global, "label"))
-				],
-				convertGermanToEnglish
+			_.uniq(
+				_.map(
+					[
+						..._.keys(this.data),
+						..._.uniq(_.map(this.data.global, "label"))
+					],
+					convertGermanToEnglish
+				)
 			)
 		);
 	};

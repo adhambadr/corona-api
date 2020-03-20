@@ -79,19 +79,26 @@ export default class historicData extends Corona {
 
 		const timeSeries = _.groupBy(countryData, "date");
 
-		result.federal = _.map(timeSeries, (data, timestamp) =>
-			_.reduce(
-				data,
-				(sum, { date, confirmed, recovered, deaths }) => ({
-					date,
-					confirmed: (confirmed || 0) + (sum.confirmed || 0),
-					recovered: (recovered || 0) + (sum.recovered || 0),
-					deaths: (deaths || 0) + (sum.deaths || 0)
-				}),
-				{}
-			)
-		);
-		result.federal.push(current);
+		result.federal = _.size(globalPoint)
+			? globalPoint
+			: _.map(timeSeries, (data, timestamp) =>
+					_.reduce(
+						data,
+						(sum, { date, confirmed, recovered, deaths }) => ({
+							date,
+							confirmed: (confirmed || 0) + (sum.confirmed || 0),
+							recovered: (recovered || 0) + (sum.recovered || 0),
+							deaths: (deaths || 0) + (sum.deaths || 0)
+						}),
+						{}
+					)
+			  );
+		if (
+			!this.equalPoints(current, _.last(result.federal)) &&
+			this.isFrance(country)
+		) {
+			result.federal.push(current);
+		}
 		return result;
 	};
 
