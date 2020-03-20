@@ -6,7 +6,9 @@ import fs from "fs";
 import { convertCountryName } from "./countries.js";
 
 export default class historicData extends Corona {
-	static cache = process.env.HISTORIC_DATA || "./datadumps/history.json";
+	static cache =
+		path.join(process.env.HISTORIC_DATA, "history.json") ||
+		"./datadumps/history.json";
 
 	static cleanData = () => {
 		this.timeline = _.groupBy(this.timelineRawData, "parent");
