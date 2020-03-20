@@ -36,21 +36,28 @@ export default class historicData extends Corona {
 		this.timelineRawData = JSON.parse(fs.readFileSync(this.cache));
 		this.cleanData();
 	};
+	static equalPoints(point1, point2) {
+		return (
+			_.eq(_.get(point1, "confirmed"), _.get(point2, "confirmed")) &&
+			_.eq(_.get(point1, "deaths", _.get(point2, "deaths"))) &&
+			_.eq(_.get(point1, "recovered"), _.get(point2, "recovered"))
+		);
+	}
 	static historyQuery = async (country, city) => {
 		await this.loadHistory();
 		const current = (await this.getCountryCurrent(country)) || {};
 		const countryData = this.timeline[country] || [];
+		const globalPoint = _.sortBy(
+			_.filter(this.timeline.global, _.matches({ label: country })),
+			"date"
+		);
 		if (!_.size(countryData))
 			return {
 				federal: [
-					..._.sortBy(
-						_.filter(
-							this.timeline.global,
-							_.matches({ label: country })
-						),
-						"date"
-					),
-					current
+					...globalPoint,
+					this.equalPoints(current, _.last(globalPoint))
+						? null
+						: current
 				]
 			};
 		let result = {};
