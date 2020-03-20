@@ -3,7 +3,7 @@
     {
       "name": "Corona APIr",
       "script": "/var/www/coronaAPI/compiled/index.js",
-      "watch": false,
+      "watch": true,
       "ignore_watch": ["compiled/datadumps", "node_modules"],
       "env": {
         "NODE_ENV": "production",
