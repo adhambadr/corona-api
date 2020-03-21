@@ -47,6 +47,25 @@ export default class historicData extends Corona {
 	}
 	static historyQuery = async (country, city) => {
 		await this.loadHistory();
+
+		if (
+			!country ||
+			["global", "world", "international"].includes(country.toLowerCase())
+		) {
+			const globalPoints = this.timeline["global"];
+			// Other countries are not included
+			const total = _.concat(
+				globalPoints,
+				..._.map(_.keys(this.timeline), key =>
+					key === "global" ? [] : this.timeline[key]
+				)
+			);
+			const byKey = _.groupBy(total, "date");
+			return _.concat(
+				..._.map(byKey, (data, key) => this.reduceDataNumbers(data))
+			);
+		}
+
 		const current = (await this.getCountryCurrent(country)) || {};
 		const countryData = this.timeline[country] || [];
 		const globalPoint = _.sortBy(
@@ -82,16 +101,7 @@ export default class historicData extends Corona {
 		result.federal = _.size(globalPoint)
 			? globalPoint
 			: _.map(timeSeries, (data, timestamp) =>
-					_.reduce(
-						data,
-						(sum, { date, confirmed, recovered, deaths }) => ({
-							date,
-							confirmed: (confirmed || 0) + (sum.confirmed || 0),
-							recovered: (recovered || 0) + (sum.recovered || 0),
-							deaths: (deaths || 0) + (sum.deaths || 0)
-						}),
-						{}
-					)
+					this.reduceDataNumbers(data)
 			  );
 		if (
 			!this.equalPoints(current, _.last(result.federal)) &&
@@ -101,6 +111,19 @@ export default class historicData extends Corona {
 		}
 		return result;
 	};
+
+	static reduceDataNumbers(data) {
+		return _.reduce(
+			data,
+			(sum, { date, confirmed, recovered, deaths }) => ({
+				date,
+				confirmed: (confirmed || 0) + (sum.confirmed || 0),
+				recovered: (recovered || 0) + (sum.recovered || 0),
+				deaths: (deaths || 0) + (sum.deaths || 0)
+			}),
+			{}
+		);
+	}
 
 	static queryCountry = async (req, res) => {
 		const country = convertCountryName(req.query.country);
