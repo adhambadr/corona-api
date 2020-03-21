@@ -61,9 +61,15 @@ export default class historicData extends Corona {
 				)
 			);
 			const byKey = _.groupBy(total, "date");
-			return _.concat(
-				..._.map(byKey, (data, key) => this.reduceDataNumbers(data))
-			);
+			const today = await this.getWorldNow();
+			return {
+				federal: _.concat(
+					..._.map(byKey, (data, key) =>
+						this.reduceDataNumbers(data)
+					),
+					today
+				)
+			};
 		}
 
 		const current = (await this.getCountryCurrent(country)) || {};

@@ -122,19 +122,20 @@ export default class CoronaData {
 		}
 	};
 
+	static getWorldNow = () =>
+		_.reduce(
+			this.rawData,
+			(sum, { confirmed, recovered, deaths }) => ({
+				confirmed: (confirmed || 0) + (sum.confirmed || 0),
+				recovered: (recovered || 0) + (sum.recovered || 0),
+				deaths: (deaths || 0) + (sum.deaths || 0)
+			}),
+			{}
+		);
+
 	static queryWorld = async (req, res) => {
 		await this.getData();
-		res.status(200).json(
-			_.reduce(
-				this.rawData,
-				(sum, { confirmed, recovered, deaths }) => ({
-					confirmed: (confirmed || 0) + (sum.confirmed || 0),
-					recovered: (recovered || 0) + (sum.recovered || 0),
-					deaths: (deaths || 0) + (sum.deaths || 0)
-				}),
-				{}
-			)
-		);
+		res.status(200).json(this.getWorldNow());
 	};
 	static queryLocation = async (req, res) => {
 		const result = await this.getClosest({ ...req.body });
@@ -156,8 +157,9 @@ export default class CoronaData {
 	};
 	static getAllCountries = async (req, res) => {
 		await this.getData();
-		res.json(
-			_.uniq(
+		res.json([
+			"World",
+			..._.uniq(
 				_.map(
 					[
 						..._.keys(this.data),
@@ -166,7 +168,7 @@ export default class CoronaData {
 					convertGermanToEnglish
 				)
 			)
-		);
+		]);
 	};
 
 	static convertData = obj => ({
