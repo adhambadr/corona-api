@@ -39,11 +39,12 @@ export default class historicData extends Corona {
 		this.cleanData();
 	};
 	static equalPoints(point1, point2) {
-		return (
+		const equ =
 			_.eq(_.get(point1, "confirmed"), _.get(point2, "confirmed")) &&
-			_.eq(_.get(point1, "deaths", _.get(point2, "deaths"))) &&
-			_.eq(_.get(point1, "recovered"), _.get(point2, "recovered"))
-		);
+			_.eq(_.get(point1, "deaths"), _.get(point2, "deaths")) &&
+			_.eq(_.get(point1, "recovered"), _.get(point2, "recovered"));
+
+		return equ;
 	}
 	static historyQuery = async (country, city) => {
 		await this.loadHistory();
@@ -80,12 +81,12 @@ export default class historicData extends Corona {
 		);
 		if (!_.size(countryData))
 			return {
-				federal: [
+				federal: _.concat(
 					...globalPoint,
 					this.equalPoints(current, _.last(globalPoint))
-						? null
+						? []
 						: current
-				]
+				)
 			};
 		let result = {};
 		const stateData = _.concat(
@@ -110,8 +111,8 @@ export default class historicData extends Corona {
 					this.reduceDataNumbers(data)
 			  );
 		if (
-			!this.equalPoints(current, _.last(result.federal)) &&
-			this.isFrance(country)
+			this.equalPoints(current, _.last(result.federal))
+			//this.isFrance(country)
 		) {
 			result.federal.push(current);
 		}
