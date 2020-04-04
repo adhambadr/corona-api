@@ -1,6 +1,6 @@
 import axios from "axios";
 import _ from "lodash";
-import cj from "csvjson";
+import cj from "csvtojson";
 import fs from "fs";
 import { convertCountryName, convertGermanToEnglish } from "./countries.js";
 import { findNearest } from "geolib";
@@ -14,16 +14,16 @@ const dataDumpLocation =
 		: path.resolve(__dirname, "./datadumps/data.json");
 
 export default class CoronaData {
-	static currentUrl =
-		"https://interaktiv.morgenpost.de/corona-virus-karte-infektionen-deutschland-weltweit/data/Coronavirus.current.v2.csv";
+	static currentUrl = "https://funkeinteraktiv.b-cdn.net/current.v4.csv";
 	static historicDataUrl =
-		"https://interaktiv.morgenpost.de/corona-virus-karte-infektionen-deutschland-weltweit/data/Coronavirus.history.v2.csv?" +
+		"https://funkeinteraktiv.b-cdn.net/history.v4.csv" +
 		new Date().getTime();
 	static lastImport = 0;
 
 	static data = {};
 
 	static shouldRefresh = () =>
+		process.env.NODE_ENV !== "production" ||
 		!this.lastImport ||
 		new Date().getTime() - this.lastImport >= importInterval;
 
@@ -40,17 +40,18 @@ export default class CoronaData {
 			return this.data;
 		}
 		this.rawData = JSON.parse(fs.readFileSync(dataDumpLocation));
-		this.data = _.groupBy(this.rawData, "parent");
+		this.data = _.groupBy(this.rawData, "label_parent_en");
 		return this.data;
 	};
 
 	static queryData = async () => {
 		const { data } = await axios.get(this.currentUrl);
-		const json = cj.toObject(data);
+		const json = await cj({ output: "json" }).fromString(data);
+
 		console.log("querying ", new Date().getTime());
 		this.lastImport = new Date().getTime();
 		this.rawData = _.map(json, this.convertData);
-		this.data = _.groupBy(this.rawData, "parent");
+		this.data = _.groupBy(this.rawData, "label_parent_en");
 		return this.data;
 	};
 
@@ -70,31 +71,25 @@ export default class CoronaData {
 		if (!point) return;
 		const result = _.find(
 			this.rawData,
-			({ lat, lon, parent, label }) =>
+			({ lat, lon, label }) =>
 				_.eq(lat, point.latitude) && _.eq(lon, point.longitude)
 		);
 		return result;
 	};
 
 	static getCountryCurrent = async country => {
-		country = convertCountryName(country);
 		const data = await this.getData();
-		let globalPoint = _.find(data["global"], ({ label }) =>
-			_.eq(country, label)
+		let globalPoint = _.find(data["null"], ({ label_en }) =>
+			_.eq(country, label_en)
 		);
-		//console.log(globalPoint);
-		if (globalPoint)
-			return {
-				...globalPoint,
-				statesData: []
-			};
 
 		const statesData = _.get(data, country, []);
 		const result = this.aggregateStateData(statesData);
 
 		return {
 			...result,
-			statesData
+			statesData,
+			...globalPoint
 		};
 	};
 
@@ -124,7 +119,7 @@ export default class CoronaData {
 
 	static getWorldNow = () =>
 		_.reduce(
-			this.rawData,
+			_.filter(this.rawData, ({ parent }) => _.eq(parent, "null")),
 			(sum, { confirmed, recovered, deaths }) => ({
 				confirmed: (confirmed || 0) + (sum.confirmed || 0),
 				recovered: (recovered || 0) + (sum.recovered || 0),
@@ -143,9 +138,9 @@ export default class CoronaData {
 			return res.json({
 				err: "Parameters malformed or location not found"
 			});
-		if (result.parent === "global") return res.json(result);
+		if (result.label_parent_en === "null") return res.json(result);
 
-		const statesData = this.data[result.parent];
+		const statesData = this.data[result.label_parent_en];
 		const countryData = this.aggregateStateData(statesData);
 		res.json({
 			...result,
@@ -163,7 +158,7 @@ export default class CoronaData {
 				_.map(
 					[
 						..._.keys(this.data),
-						..._.uniq(_.map(this.data.global, "label"))
+						..._.uniq(_.map(this.data["null"], "label_en"))
 					],
 					convertGermanToEnglish
 				)
