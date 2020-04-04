@@ -52,22 +52,22 @@ export default class historicData extends Corona {
 			!country ||
 			["global", "world", "international"].includes(country.toLowerCase())
 		) {
-			const globalPoints = this.timeline["null"];
-			// Other countries are not included
-			const total = _.concat(
-				globalPoints,
-				..._.map(_.keys(this.timeline), key =>
-					key === "null" ? [] : this.timeline[key]
-				)
+			const globalPoints = _.sortBy(
+				_.filter(this.timelineRawData, {
+					parent: "null"
+				}),
+				"date"
 			);
-			const byKey = _.groupBy(total, "date");
+
+			const byKey = _.groupBy(globalPoints, "date");
 			const today = await this.getWorldNow();
+			const globals = _.map(byKey, (data, key) =>
+				this.reduceDataNumbers(data)
+			);
 			return {
 				federal: _.concat(
-					..._.map(byKey, (data, key) =>
-						this.reduceDataNumbers(data)
-					),
-					today
+					...globals,
+					this.equalPoints(today, _.last(globals)) ? [] : today
 				)
 			};
 		}
@@ -79,20 +79,13 @@ export default class historicData extends Corona {
 			_.filter(this.timeline["null"], _.matches({ label_en: country })),
 			"date"
 		);
-		if (!_.size(countryData))
-			return {
-				federal: _.concat(
-					...globalPoint,
-					this.equalPoints(current, _.last(globalPoint))
-						? []
-						: current
-				)
-			};
-		else
-			return {
-				federal: globalPoint,
-				..._.groupBy(countryData, "label_en")
-			};
+		return {
+			federal: _.concat(
+				...globalPoint,
+				this.equalPoints(current, _.last(globalPoint)) ? [] : current
+			),
+			..._.groupBy(countryData, "label_en")
+		};
 	};
 
 	static reduceDataNumbers(data) {
@@ -119,4 +112,15 @@ export default class historicData extends Corona {
 			res.status(500).json({ err: e });
 		}
 	};
+	static convertData = obj => ({
+		...super.convertData(obj),
+		date:
+			new Date(obj.date) == "Invalid Date"
+				? new Date(
+						obj.date.substring(0, 4),
+						Number(obj.date.substring(4, 6)) - 1,
+						obj.date.substring(6, 8)
+				  )
+				: new Date(obj.date)
+	});
 }
