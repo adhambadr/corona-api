@@ -1,7 +1,7 @@
 import Corona from "./corona.js";
 import axios from "axios";
 import _ from "lodash";
-import cj from "csvjson";
+import cj from "csvtojson";
 import fs from "fs";
 import path from "path";
 export default class historicData extends Corona {
@@ -14,7 +14,7 @@ export default class historicData extends Corona {
 	};
 	static queryHistoricData = async () => {
 		const { data } = await axios.get(this.historicDataUrl);
-		const json = cj.toObject(data);
+		const json = await cj({ output: "json" }).fromString(data);
 		this.timelineRawData = _.map(json, this.convertData);
 		this.lastImport = new Date().getTime();
 		await this.getData();
@@ -74,6 +74,7 @@ export default class historicData extends Corona {
 
 		const current = (await this.getCountryCurrent(country)) || {};
 		const countryData = this.timeline[country] || [];
+
 		const globalPoint = _.sortBy(
 			_.filter(this.timeline["null"], _.matches({ label_en: country })),
 			"date"
@@ -87,35 +88,11 @@ export default class historicData extends Corona {
 						: current
 				)
 			};
-		let result = {};
-		const stateData = _.concat(
-			countryData,
-			_.get(current, "statesData", [])
-		);
-		if (city)
-			result = _.sortBy(
-				_.filter(stateData, _.matches({ label_en: city })),
-				"date"
-			);
 		else
-			_.map(_.groupBy(stateData, "label_en"), (stateData, stateName) => {
-				result[stateName] = _.sortBy(stateData, "date");
-			});
-
-		const timeSeries = _.groupBy(countryData, "date");
-
-		result.federal = _.size(globalPoint)
-			? globalPoint
-			: _.map(timeSeries, (data, timestamp) =>
-					this.reduceDataNumbers(data)
-			  );
-		if (
-			this.equalPoints(current, _.last(result.federal))
-			//this.isFrance(country)
-		) {
-			result.federal.push(current);
-		}
-		return result;
+			return {
+				federal: globalPoint,
+				..._.groupBy(countryData, "label_en")
+			};
 	};
 
 	static reduceDataNumbers(data) {

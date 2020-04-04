@@ -14,9 +14,7 @@ const dataDumpLocation =
 
 export default class CoronaData {
 	static currentUrl = "https://funkeinteraktiv.b-cdn.net/current.v4.csv";
-	static historicDataUrl =
-		"https://funkeinteraktiv.b-cdn.net/history.v4.csv" +
-		new Date().getTime();
+	static historicDataUrl = "https://funkeinteraktiv.b-cdn.net/history.v4.csv";
 	static lastImport = 0;
 
 	static groupingKey = "label_parent_en";
