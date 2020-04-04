@@ -2,7 +2,6 @@ import axios from "axios";
 import _ from "lodash";
 import cj from "csvtojson";
 import fs from "fs";
-import { convertCountryName, convertGermanToEnglish } from "./countries.js";
 import { findNearest } from "geolib";
 import path from "path";
 
@@ -19,6 +18,8 @@ export default class CoronaData {
 		"https://funkeinteraktiv.b-cdn.net/history.v4.csv" +
 		new Date().getTime();
 	static lastImport = 0;
+
+	static groupingKey = "label_parent_en";
 
 	static data = {};
 
@@ -40,7 +41,7 @@ export default class CoronaData {
 			return this.data;
 		}
 		this.rawData = JSON.parse(fs.readFileSync(dataDumpLocation));
-		this.data = _.groupBy(this.rawData, "label_parent_en");
+		this.data = _.groupBy(this.rawData, this.groupingKey);
 		return this.data;
 	};
 
@@ -51,7 +52,7 @@ export default class CoronaData {
 		console.log("querying ", new Date().getTime());
 		this.lastImport = new Date().getTime();
 		this.rawData = _.map(json, this.convertData);
-		this.data = _.groupBy(this.rawData, "label_parent_en");
+		this.data = _.groupBy(this.rawData, this.groupingKey);
 		return this.data;
 	};
 
@@ -138,9 +139,9 @@ export default class CoronaData {
 			return res.json({
 				err: "Parameters malformed or location not found"
 			});
-		if (result.label_parent_en === "null") return res.json(result);
+		if (result[this.groupingKey] === "null") return res.json(result);
 
-		const statesData = this.data[result.label_parent_en];
+		const statesData = this.data[result[this.groupingKey]];
 		const countryData = this.aggregateStateData(statesData);
 		res.json({
 			...result,
@@ -155,13 +156,10 @@ export default class CoronaData {
 		res.json([
 			"World",
 			..._.uniq(
-				_.map(
-					[
-						..._.keys(this.data),
-						..._.uniq(_.map(this.data["null"], "label_en"))
-					],
-					convertGermanToEnglish
-				)
+				_.map([
+					..._.keys(this.data),
+					..._.uniq(_.map(this.data["null"], "label_en"))
+				])
 			)
 		]);
 	};

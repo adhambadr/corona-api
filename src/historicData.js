@@ -3,7 +3,6 @@ import axios from "axios";
 import _ from "lodash";
 import cj from "csvjson";
 import fs from "fs";
-import { convertCountryName } from "./countries.js";
 import path from "path";
 export default class historicData extends Corona {
 	static cache = process.env.HISTORIC_DATA
@@ -11,7 +10,7 @@ export default class historicData extends Corona {
 		: "./datadumps/history.json";
 
 	static cleanData = () => {
-		this.timeline = _.groupBy(this.timelineRawData, "parent");
+		this.timeline = _.groupBy(this.timelineRawData, this.groupingKey);
 	};
 	static queryHistoricData = async () => {
 		const { data } = await axios.get(this.historicDataUrl);
@@ -53,12 +52,12 @@ export default class historicData extends Corona {
 			!country ||
 			["global", "world", "international"].includes(country.toLowerCase())
 		) {
-			const globalPoints = this.timeline["global"];
+			const globalPoints = this.timeline["null"];
 			// Other countries are not included
 			const total = _.concat(
 				globalPoints,
 				..._.map(_.keys(this.timeline), key =>
-					key === "global" ? [] : this.timeline[key]
+					key === "null" ? [] : this.timeline[key]
 				)
 			);
 			const byKey = _.groupBy(total, "date");
@@ -76,7 +75,7 @@ export default class historicData extends Corona {
 		const current = (await this.getCountryCurrent(country)) || {};
 		const countryData = this.timeline[country] || [];
 		const globalPoint = _.sortBy(
-			_.filter(this.timeline.global, _.matches({ label: country })),
+			_.filter(this.timeline["null"], _.matches({ label_en: country })),
 			"date"
 		);
 		if (!_.size(countryData))
@@ -95,11 +94,11 @@ export default class historicData extends Corona {
 		);
 		if (city)
 			result = _.sortBy(
-				_.filter(stateData, _.matches({ label: city })),
+				_.filter(stateData, _.matches({ label_en: city })),
 				"date"
 			);
 		else
-			_.map(_.groupBy(stateData, "label"), (stateData, stateName) => {
+			_.map(_.groupBy(stateData, "label_en"), (stateData, stateName) => {
 				result[stateName] = _.sortBy(stateData, "date");
 			});
 
@@ -133,7 +132,7 @@ export default class historicData extends Corona {
 	}
 
 	static queryCountry = async (req, res) => {
-		const country = convertCountryName(req.query.country);
+		const country = req.query.country;
 
 		const city = req.query.city;
 		try {
